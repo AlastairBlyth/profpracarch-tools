@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   try {
     let body = req.body;
     if (typeof body === 'string') body = JSON.parse(body);
-    const { payload, cmsKey } = body;
+    const { payload } = body;
     const clean = {
       title:    payload.title,
       slug:     payload.slug,
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cmsKey}`,
+        'Authorization': 'Bearer profprac2026admin',
       },
       body: JSON.stringify(clean),
     });
