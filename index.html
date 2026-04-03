@@ -129,7 +129,7 @@ function ResultCard({r,cmsKey}){
     setCmsStatus("sending");
     const slug=toSlug(editTitle)+"-"+Date.now().toString(36);
     try{
-      const resp=await fetch("https://profpracarch.org/api/articles",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${cmsKey}`},body:JSON.stringify({title:editTitle,slug,summary:editBody.slice(0,200),content:editBody+(r.url?`\n\n[Source](${r.url})`:""),section:editSec,status:"draft",tags:[r.source.name],source:r.url||""})});
+      const resp=await fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${cmsKey}`},body:JSON.stringify({payload:{title:editTitle,slug,summary:editBody.slice(0,200),content:editBody+(r.url?`\n\n[Source](${r.url})`:""),section:editSec,status:"draft",tags:[r.source.name],source:r.url||""})});
       if(!resp.ok)throw new Error(`${resp.status}`);
       setCmsStatus("sent");
     }catch(e){setCmsStatus("error");setTimeout(()=>setCmsStatus("idle"),3000);}
