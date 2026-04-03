@@ -5,19 +5,21 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
   try {
-    const { payload, cmsKey } = req.body;
+    let body = req.body;
+    if (typeof body === 'string') body = JSON.parse(body);
+    const { payload, cmsKey } = body;
     const clean = {
-      title:       payload.title,
-      slug:        payload.slug,
-      summary:     payload.summary,
-      content:     payload.content,
-      section:     payload.section,
-      status:      "DRAFT",
-      author:      "Content Monitor",
-      source:      payload.source || null,
-      tags:        [],
-      featured:    false,
-      urgent:      false,
+      title:    payload.title,
+      slug:     payload.slug,
+      summary:  payload.summary,
+      content:  payload.content,
+      section:  payload.section,
+      status:   "DRAFT",
+      author:   "Content Monitor",
+      source:   payload.source || null,
+      tags:     [],
+      featured: false,
+      urgent:   false,
     };
     const response = await fetch('https://profpracarch.org/api/articles', {
       method: 'POST',
@@ -33,3 +35,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: e.message });
   }
 }
+export const config = { api: { bodyParser: true } };
