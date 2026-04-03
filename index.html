@@ -89,7 +89,8 @@ IMPORTANT: Do not include any citation tags, reference markers, footnotes, or ma
 
 After searching respond ONLY with a valid JSON object, no preamble, no markdown fences:
 {"hasUpdate":true,"headline":"brief headline","summary":"draft paragraph 100-150 words","url":"source URL","date":"date if found","section":"Regulatory/Education/Practice/Planning/Ethics/Procurement/Global"}
-If no significant update found: {"hasUpdate":false,"headline":"","summary":"","url":"","date":"","section":""}`;
+If no significant update found: {"hasUpdate":false,"headline":"","summary":"","url":"","date":"","section":""}
+CRITICAL: Your summary field must contain clean prose only. Absolutely no XML tags, cite tags, reference markers, footnote numbers, or any markup whatsoever. No <cite>, </cite>, [1], (1) or similar. If you include any tags the output is unusable.`;
 function extractJSON(t){const m=t.match(/\{[\s\S]*\}/);if(!m)return null;try{return JSON.parse(m[0]);}catch{return null;}}
 function toSlug(h){return h.toLowerCase().replace(/[^a-z0-9\s-]/g,"").trim().replace(/\s+/g,"-").slice(0,80);}
 function ApiKeySetup({onSave}){
