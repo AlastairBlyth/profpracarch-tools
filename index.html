@@ -85,13 +85,12 @@ const SOURCES = [
 const VALID_SECTIONS = ["Regulatory","Education","Practice","Planning","Ethics","Procurement","Global"];
 const SYSTEM = `You are the content monitor for profpracarch.org, a professional practice resource for UK architects. Search for recent updates (last 2-4 weeks) from a specified source.
 The profpracarch.org editorial voice: analytical and authoritative; opens with a short punchy sentence then measured qualifying analysis; notes tensions and unintended consequences; connects developments to practical implications for architects; avoids breathless enthusiasm; slightly dry wit; never promotional. Draft paragraphs 100-150 words.
-IMPORTANT: Do not include any citation tags, reference markers, footnotes, or markup like <cite>, [1], or similar in your response. Write clean prose only.
-
+CRITICAL: The summary field must contain clean prose only. No XML tags, no cite tags, no reference markers, no footnote numbers, no markup of any kind. No <cite>, </cite>, [1], (1) or similar. Write clean flowing paragraphs only.
 After searching respond ONLY with a valid JSON object, no preamble, no markdown fences:
-{"hasUpdate":true,"headline":"brief headline","summary":"draft paragraph 100-150 words","url":"source URL","date":"date if found","section":"Regulatory/Education/Practice/Planning/Ethics/Procurement/Global"}
-If no significant update found: {"hasUpdate":false,"headline":"","summary":"","url":"","date":"","section":""}
-CRITICAL: Your summary field must contain clean prose only. Absolutely no XML tags, cite tags, reference markers, footnote numbers, or any markup whatsoever. No <cite>, </cite>, [1], (1) or similar. If you include any tags the output is unusable.`;
+{"hasUpdate":true,"headline":"brief headline","summary":"clean prose only 100-150 words","url":"source URL","date":"date if found","section":"Regulatory/Education/Practice/Planning/Ethics/Procurement/Global"}
+If no significant update found: {"hasUpdate":false,"headline":"","summary":"","url":"","date":"","section":""}`;
 function extractJSON(t){const m=t.match(/\{[\s\S]*\}/);if(!m)return null;try{return JSON.parse(m[0]);}catch{return null;}}
+function stripCites(t){return(t||"").replace(/<cite[^>]*>/g,"").replace(/<\/cite>/g,"").replace(/\s+/g," ").trim();}
 function toSlug(h){return h.toLowerCase().replace(/[^a-z0-9\s-]/g,"").trim().replace(/\s+/g,"-").slice(0,80);}
 function ApiKeySetup({onSave}){
   const [ak,setAk]=useState(""); const [ck,setCk]=useState("");
@@ -121,7 +120,7 @@ function ResultCard({r,cmsKey}){
   const [copied,setCopied]=useState(false);
   const [cmsStatus,setCmsStatus]=useState("idle");
   const [editTitle,setEditTitle]=useState(r.headline);
-  const [editBody,setEditBody]=useState(r.summary);
+  const [editBody,setEditBody]=useState(stripCites(r.summary));
   const [editSec,setEditSec]=useState(VALID_SECTIONS.includes(r.section)?r.section:"Practice");
   const [editing,setEditing]=useState(false);
   const copy=()=>{navigator.clipboard.writeText(editBody);setCopied(true);setTimeout(()=>setCopied(false),1500);};
@@ -129,8 +128,8 @@ function ResultCard({r,cmsKey}){
     setCmsStatus("sending");
     const slug=toSlug(editTitle)+"-"+Date.now().toString(36);
     try{
-      const resp=await fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${cmsKey}`},body:JSON.stringify({payload:{title:editTitle,slug,summary:editBody.slice(0,200),content:editBody+(r.url?`\n\n[Source](${r.url})`:""),section:editSec,status:"draft",tags:[r.source.name],source:r.url||""})});
-      if(!resp.ok)throw new Error(`${resp.status}`);
+      const resp=await fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cmsKey,payload:{title:editTitle,slug,summary:editBody.slice(0,200),content:editBody+(r.url?"\n\n[Source]("+r.url+")":""),section:editSec,status:"draft",tags:[r.source.name],source:r.url||""}})});
+      if(!resp.ok)throw new Error(resp.status);
       setCmsStatus("sent");
     }catch(e){setCmsStatus("error");setTimeout(()=>setCmsStatus("idle"),3000);}
   };
@@ -167,14 +166,14 @@ function ResultCard({r,cmsKey}){
 function DigestPanel({updates,onClose}){
   const [copied,setCopied]=useState(false);
   const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
-  const text=`profpracarch.org Content Monitor — ${date}\n${updates.length} update${updates.length>1?"s":""} found\n\n`+updates.map(r=>`${r.source.name.toUpperCase()}${r.section?" — "+r.section:""}\n${r.headline}\n\n${r.summary}${r.url?"\n\nSource: "+r.url:""}`).join("\n\n---\n\n");
+  const text=`profpracarch.org Content Monitor — ${date}\n${updates.length} update${updates.length>1?"s":""} found\n\n`+updates.map(r=>`${r.source.name.toUpperCase()}${r.section?" — "+r.section:""}\n${r.headline}\n\n${stripCites(r.summary)}${r.url?"\n\nSource: "+r.url:""}`).join("\n\n---\n\n");
   const copy=()=>{navigator.clipboard.writeText(text);setCopied(true);setTimeout(()=>setCopied(false),1500);};
   return(<div className="card" style={{marginBottom:"1.5rem",background:"var(--bg-secondary)"}}>
     <div className="flex-between" style={{marginBottom:"1rem"}}>
       <div><p className="label">Email digest</p><p className="mono" style={{fontSize:11,color:"var(--text-tertiary)",marginTop:2}}>{updates.length} update{updates.length>1?"s":""} · {date}</p></div>
       <div className="btn-row"><button onClick={copy}>{copied?"Copied ✓":"Copy all"}</button><button onClick={onClose}>Close</button></div>
     </div>
-    {updates.map((r,i)=>(<div key={r.source.id}>{i>0&&<hr className="divider"/>}<p className="mono" style={{fontSize:11,color:"var(--teal-text)",marginBottom:3}}>{r.source.name}{r.section?" · "+r.section:""}</p><p style={{fontSize:13,fontWeight:500,marginBottom:5}}>{r.headline}</p><p style={{fontSize:12,color:"var(--text-secondary)",lineHeight:1.7,marginBottom:r.url?4:0}}>{r.summary}</p>{r.url&&<a href={r.url} target="_blank" rel="noopener noreferrer" className="mono" style={{fontSize:11}}>{r.url}</a>}</div>))}
+    {updates.map((r,i)=>(<div key={r.source.id}>{i>0&&<hr className="divider"/>}<p className="mono" style={{fontSize:11,color:"var(--teal-text)",marginBottom:3}}>{r.source.name}{r.section?" · "+r.section:""}</p><p style={{fontSize:13,fontWeight:500,marginBottom:5}}>{r.headline}</p><p style={{fontSize:12,color:"var(--text-secondary)",lineHeight:1.7,marginBottom:r.url?4:0}}>{stripCites(r.summary)}</p>{r.url&&<a href={r.url} target="_blank" rel="noopener noreferrer" className="mono" style={{fontSize:11}}>{r.url}</a>}</div>))}
   </div>);}
 function Monitor({apiKey,cmsKey,onClearKey}){
   const [results,setResults]=useState({});
