@@ -82,7 +82,7 @@ const SOURCES = [
   { id:"rics",  name:"RICS",               query:"RICS professional standard guidance note publication 2026" },
   { id:"aj",    name:"Architects Journal", query:"Architects Journal regulation profession news recent weeks 2026" },
 ];
-const VALID_SECTIONS = ["Regulatory","Education","Practice","Planning","Ethics","Procurement","Global"];
+const VALID_SECTIONS = ["REGULATORY","EDUCATION","PRACTICE_FEED","PRACTICE_MANAGEMENT","ETHICS","PROCUREMENT","GLOBAL","SUSTAINABILITY"];
 const SYSTEM = `You are the content monitor for profpracarch.org, a professional practice resource for UK architects. Search for recent updates (last 2-4 weeks) from a specified source.
 The profpracarch.org editorial voice: analytical and authoritative; opens with a short punchy sentence then measured qualifying analysis; notes tensions and unintended consequences; connects developments to practical implications for architects; avoids breathless enthusiasm; slightly dry wit; never promotional. Draft paragraphs 100-150 words.
 CRITICAL: The summary field must contain clean prose only. No XML tags, no cite tags, no reference markers, no footnote numbers, no markup of any kind. No <cite>, </cite>, [1], (1) or similar. Write clean flowing paragraphs only.
@@ -121,14 +121,14 @@ function ResultCard({r,cmsKey}){
   const [cmsStatus,setCmsStatus]=useState("idle");
   const [editTitle,setEditTitle]=useState(r.headline);
   const [editBody,setEditBody]=useState(stripCites(r.summary));
-  const [editSec,setEditSec]=useState(VALID_SECTIONS.includes(r.section)?r.section:"Practice");
+  const [editSec,setEditSec]=useState(VALID_SECTIONS.includes(r.section)?r.section:"PRACTICE_FEED");
   const [editing,setEditing]=useState(false);
   const copy=()=>{navigator.clipboard.writeText(editBody);setCopied(true);setTimeout(()=>setCopied(false),1500);};
   const sendToCMS=async()=>{
     setCmsStatus("sending");
     const slug=toSlug(editTitle)+"-"+Date.now().toString(36);
     try{
-      const resp=await fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cmsKey,payload:{title:editTitle,slug,summary:editBody.slice(0,200),content:editBody+(r.url?"\n\n[Source]("+r.url+")":""),section:editSec,status:"draft",tags:[r.source.name],source:r.url||""}})});
+      const resp=await fetch("/api/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({cmsKey,payload:{title:editTitle,slug,summary:editBody.slice(0,200),content:editBody+(r.url?"\n\n[Source]("+r.url+")":""),section:editSec,status:"DRAFT",tags:[r.source.name],source:r.url||""}})});
       if(!resp.ok)throw new Error(resp.status);
       setCmsStatus("sent");
     }catch(e){setCmsStatus("error");setTimeout(()=>setCmsStatus("idle"),3000);}
