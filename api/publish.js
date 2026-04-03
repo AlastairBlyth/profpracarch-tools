@@ -1,3 +1,14 @@
+const SECTION_MAP = {
+  "REGULATORY": "REGULATORY", "Regulatory": "REGULATORY",
+  "EDUCATION": "EDUCATION", "Education": "EDUCATION",
+  "ETHICS": "ETHICS", "Ethics": "ETHICS",
+  "PROCUREMENT": "PROCUREMENT", "Procurement": "PROCUREMENT",
+  "GLOBAL": "GLOBAL", "Global": "GLOBAL",
+  "SUSTAINABILITY": "SUSTAINABILITY", "Sustainability": "SUSTAINABILITY",
+  "PRACTICE_FEED": "PRACTICE_FEED", "Practice": "PRACTICE_FEED",
+  "PRACTICE_MANAGEMENT": "PRACTICE_MANAGEMENT", "Planning": "REGULATORY",
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,12 +19,14 @@ export default async function handler(req, res) {
     let body = req.body;
     if (typeof body === 'string') body = JSON.parse(body);
     const { payload } = body;
+    const section = SECTION_MAP[payload.section] || "PRACTICE_FEED";
+    const slug = payload.slug + "-" + Math.random().toString(36).slice(2,8);
     const clean = {
       title:    payload.title,
-      slug:     payload.slug,
+      slug,
       summary:  payload.summary,
       content:  payload.content,
-      section:  payload.section,
+      section,
       status:   "DRAFT",
       author:   "Content Monitor",
       source:   payload.source || null,
